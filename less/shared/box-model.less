@@ -1,0 +1,97 @@
+/* ================================================================ */
+/* Variables */
+/* ================================================================ */
+
+@grid-gutter-width: 16px;   // Bootstrap override
+
+/* ================================================================ */
+/* At-rules */
+/* ================================================================ */
+
+// - None specified ---
+
+/* ================================================================ */
+/* Mixins */
+/* ================================================================ */
+
+// - None specified ---
+
+/* ================================================================ */
+/* Elements */
+/* ================================================================ */
+
+h1,h2,h3,h4,h5,h6 {
+  overflow: hidden;   // headers are block elements in Bootstrap, so make sure they contain their contents
+}
+
+h1, h2, h3 {
+  margin-top: 0px;
+}
+
+section {
+  padding-top: (1.5*@navbar-height);   // leave space for fixed navbar
+  padding-bottom: (1.5*@navbar-height);
+  min-height: 25vh;
+}
+
+/* ================================================================ */
+/* Classes */
+/* ================================================================ */
+
+.box {
+  overflow: hidden;
+  padding-top   : @tile-col-padding;
+  padding-bottom: @tile-col-padding;
+  padding-left  : @tile-col-gutter;
+  padding-right : @tile-col-gutter;
+  &.box-tall {
+    padding-bottom: (8*@tile-col-padding);
+  }
+  & > *:last-child { margin-bottom: 0px; }
+}
+
+.media-object {
+  width: 64px;   // force width in case of under/oversized images
+}
+
+.navbar {
+  .dropdown-menu {
+    width: 250px;
+  }
+}
+
+.row:not(:first-child) {
+  padding-top: @navbar-height;
+}
+
+.tab-pane {
+  margin-top: @grid-gutter-width;
+}
+
+.tile.tile-full {
+  padding-left: 0px;
+  padding-right: 0px;  
+  .tile-body { padding: 0px; }
+}
+
+/* ================================================================ */
+/* Everything else */
+/* ================================================================ */
+
+// Add scrolling to Bootstrap list-groups
+div.list-group.list-group-scroll-long { // 0021
+  overflow-y: scroll;
+  max-height: (24*@line-height-computed);
+}
+  
+div.list-group.list-group-scroll-short { // 0021
+  overflow-y: scroll;
+  max-height: (12*@line-height-computed);
+}
+
+img.img-contain {
+  width: 100%;
+}
+video.video-contain { 
+  width: 100% 
+}

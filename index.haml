@@ -1,0 +1,167 @@
+!!!
+%html
+  %head
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="img/favicon.png">
+
+    %title Document Upload
+
+    <!-- Bootstrap core CSS + customizations -->
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="bower_components/selectize/dist/css/selectize.bootstrap3.css">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
+    <script src="bower_components/respond/dest/respond.min.js"></script>
+    <![endif]-->
+  %body
+    %section
+      .container
+        .row
+          .col-md-6
+            %form#form-request
+              .form-group
+                %label Title
+                %input.form-control(name="title")
+              .form-group
+                %label Division
+                %select.form-control(name="division" placeholder="Select a division...")
+                  %option(value="") Select a division...
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+              .form-group
+                %label File Type
+                %select.form-control(name="file-type" placeholder="Select a file type...")
+                  %option(value="") Select a file type...
+                  %option(value="Word") Word
+                  %option(value="PDF") PDF
+                  %option(value="Excel") Excel
+                  %option(value="PowerPoint") Powerpoint
+                  %option(value="Video") Video
+                  %option(value="file") Other
+              .form-group
+                %label Business Area
+                %input.form-control(name="business-area" value="-")
+              .form-group
+                %label Category
+                %input.form-control(name="category" value="-")
+              .form-group
+                %label Subject
+                %input.form-control(name="subject" value="-")
+              .form-group.has-error
+                %label Select File
+                %input(type="file" name="attachment")
+                %p.help-block.hidden Something went wrong!
+              %button.btn.btn-default(type="submit") Submit
+              %p.help-block Will upload the selected file, if any.
+          .col-md-6
+            %form
+              .form-group
+                %label Copy from below to data.json
+                %textarea.form-control#textarea-json(rows="8")
+    / Placed at the end of the document so the pages load faster
+    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="bower_components/selectize/dist/js/standalone/selectize.min.js"></script>
+    :javascript
+      $(window).load(function() {
+
+      });
+      
+      /**
+       * Called like a jQuery callback, with `this` a reference to 
+       * the (raw) form element we're formatting.
+       */
+      function formatJson(hash){
+        var form = {};
+        var formVals = $(this).serializeArray();
+        
+        formVals.forEach(function(formVal){
+          form[formVal.name] = formVal.value;
+        });
+        
+        // TODO: Still need ID, Category
+        var formatted = `["${hash}","${form.title}","${form.division}","${form['file-type']}","${form['business-area']}","${form.category}","${form.subject}"],`;
+        
+        $('textarea#textarea-json').val(formatted);
+      }
+            
+      function upload(evt){
+        evt.preventDefault();
+        
+        var formElem = this;
+        var $formElem = $(this);
+        
+        var attachments = $formElem.find('input[name="attachment"]').get(0).files;
+        if(attachments.length === 0){
+          $formElem.find('.help-block').removeClass('hidden');
+          $formElem.find('.help-block').text('No attachment specified!');
+          
+          formatJson.call(formElem, '???');
+          return;
+        }
+        
+        opts = {};
+        opts['attachment'] = attachments[0];
+        
+        var form = new FormData();
+        form.append("attachment", opts.attachment);
+        
+        $.ajax({
+          type: "POST",
+          url: 'upload.php',
+          processData: false,
+          contentType: false, // note, this is a multipart form request. 
+          data: form
+        })
+        .done(function(data, status, resp){
+          console.log('Upload success!');
+          
+          var hashed = $.parseJSON(resp.responseText);
+          console.log(hashed);
+          
+          formatJson.call(formElem, hashed.attachment);
+        })
+        .fail(function(resp){
+          console.log("POST operation failed!");
+          
+          var errObj = $.parseJSON(resp.responseText);
+          
+          $formElem.find('.help-block').removeClass('hidden');
+          $formElem.find('.help-block').text(errObj.error);
+          
+          formatJson.call(formElem, '???');
+        });
+      }
+                 
+      $(document).ready(function(evt) {
+        $('form#form-request select[name="division"]').selectize({
+          sortField: 'text'
+        });
+        $('form#form-request select[name="file-type"]').selectize({
+          sortField: 'text'
+        });
+        
+      // Handle field formatting, document uploads
+        $('form#form-request').submit(upload);
+        // $('form#form-request').submit(formatJson);
+      });
