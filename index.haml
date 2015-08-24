@@ -22,6 +22,58 @@
     %section
       .container
         .row
+          .col-md-12
+            %table.table.table-bordered#table-edit
+              %thead
+                %tr
+                  %th.col-sm-3 Title
+                  %th.col-sm-2 Division
+                  %th.col-sm-1 File Type
+                  %th.col-sm-2 Business Area
+                  %th.col-sm-1 Category
+                  %th.col-sm-2 Subject
+                  %th.col-sm-1 File
+              %tbody
+                %tr
+                  %td.form-group
+                    %input.form-control(name="title")
+                  %td.form-group
+                    %select.form-control(name="division" placeholder="Select a division...")
+                      %option(value="") Select a division...
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                      <option value="Example Value">Example Value</option>
+                  %td.form-group
+                    %select.form-control(name="file-type" placeholder="Select a file type...")
+                      %option(value="") Select a file type...
+                      %option(value="Word") Word
+                      %option(value="PDF") PDF
+                      %option(value="Excel") Excel
+                      %option(value="PowerPoint") Powerpoint
+                      %option(value="Video") Video
+                      %option(value="file") Other
+                  %td.form-group
+                    %input.form-control(name="business-area" value="-")
+                  %td.form-group
+                    %input.form-control(name="category" value="-")
+                  %td.form-group
+                    %input.form-control(name="subject" value="-")
+                  %td -
+        .row
           .col-md-6
             %form#form-request
               .form-group
@@ -99,7 +151,6 @@
           form[formVal.name] = formVal.value;
         });
         
-        // TODO: Still need ID, Category
         var formatted = `["${hash}","${form.title}","${form.division}","${form['file-type']}","${form['business-area']}","${form.category}","${form.subject}"],`;
         
         $('textarea#textarea-json').val(formatted);
@@ -161,7 +212,25 @@
           sortField: 'text'
         });
         
+        // %table.table.table-bordered#table-edit
+        //   %thead
+        //     %tr
+        //       %th Title
+        //       %th Division
+        //       %th File Type
+        //       %th Business Area
+        //       %th Category
+        //       %th Subject
+        //       %th File
+        //   %tbody
+        //     %tr
+        //       %form
+        //         %td.form-group
+        
+        $('table#table-edit tbody > tr').each(function(){
+          $(this).find('select').selectize({ sortField:'text' });
+        });
+        
       // Handle field formatting, document uploads
         $('form#form-request').submit(upload);
-        // $('form#form-request').submit(formatJson);
       });
