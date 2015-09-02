@@ -1,7 +1,10 @@
 <?php
   require_once('response.util.php');
+  
+  header("Access-Control-Allow-Orgin: *");
+  header("Access-Control-Allow-Methods: *");
+  header("Content-Type: application/json");
 
-  $isJsonSubmit = strpos($_SERVER['CONTENT_TYPE'], 'application/json') === 0;
   $isMultipartSubmit = strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === 0;
   
   // JSON form submit + file attachment

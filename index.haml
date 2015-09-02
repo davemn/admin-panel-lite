@@ -176,12 +176,12 @@
           saved = $.parseJSON(resp.responseText);
           
           $('table#table-edit > tbody').append(`<tr>
-            <td><a href="${saved.id}">${saved.title}</a></td>
-            <td>${saved.division}</td>
-            <td>${saved['file-type']}</td>
-            <td>${saved['business-area']}</td>
-            <td>${saved.category}</td>
-            <td>${saved.subject}</td>
+            <td><a href="${saved[0]}">${saved[1]}</a></td>
+            <td>${saved[2]}</td>
+            <td>${saved[3]}</td>
+            <td>${saved[4]}</td>
+            <td>${saved[5]}</td>
+            <td>${saved[6]}</td>
             <td>-</td>
           </tr>`);
         })
