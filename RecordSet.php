@@ -3,65 +3,32 @@
     private $filename;
     private $data;
     private $dataHash; // an MD5 hash of the contents of each record
+    
+    static function dataPrettyPrint($records){
+      $preamble = <<<JSON
+{
+  "data": [
 
-    /**
-     * Pre- PHP 5.4 JSON pretty printing.
-     * From http://stackoverflow.com/questions/6054033/pretty-printing-json-with-php
-     */
-    static function jsonPrettyPrint($json){
-      $result = '';
-      $level = 0;
-      $in_quotes = false;
-      $in_escape = false;
-      $ends_line_level = NULL;
-      $json_length = strlen( $json );
+JSON;
 
-      for( $i = 0; $i < $json_length; $i++ ) {
-        $char = $json[$i];
-        $new_line_level = NULL;
-        $post = "";
-        if( $ends_line_level !== NULL ) {
-          $new_line_level = $ends_line_level;
-          $ends_line_level = NULL;
-        }
-        if ( $in_escape ) {
-          $in_escape = false;
-        } else if( $char === '"' ) {
-          $in_quotes = !$in_quotes;
-        } else if( ! $in_quotes ) {
-          switch( $char ) {
-            case '}': case ']':
-              $level--;
-              $ends_line_level = NULL;
-              $new_line_level = $level;
-              break;
-
-            case '{': case '[':
-              $level++;
-            case ',':
-              $ends_line_level = $level;
-              break;
-
-            case ':':
-              $post = " ";
-              break;
-
-            case " ": case "\t": case "\n": case "\r":
-              $char = "";
-              $ends_line_level = $new_line_level;
-              $new_line_level = NULL;
-              break;
-          }
-        } else if ( $char === '\\' ) {
-          $in_escape = true;
-        }
-        if( $new_line_level !== NULL ) {
-          $result .= "\n".str_repeat( "  ", $new_line_level );
-        }
-        $result .= $char.$post;
+      $body = '';
+      $record = null;
+      for($i = 0; $i < count($records); $i++){
+        $record = $records[$i];
+        $body .= '    ' . json_encode($record);
+        if($i < count($records)-1)
+          $body .= ',';
+        
+        $body .= PHP_EOL;
       }
+      $body = substr($body, 0, strlen($body)-1); // drop trailing comma
 
-      return $result;
+      $postscript = <<<JSON
+  ]
+}
+JSON;
+
+      return $preamble . $body . $postscript;
     }
     
     static function hashRecord($record){
@@ -120,9 +87,7 @@
     }
     
     function save(){
-      // file_put_contents($this->filename, json_encode(array('data' => $this->data), JSON_PRETTY_PRINT));
-      
-      $pretty = RecordSet::jsonPrettyPrint(json_encode(array('data' => $this->data)));
+      $pretty = RecordSet::dataPrettyPrint($this->data);
       file_put_contents($this->filename, $pretty);
     }
   }
