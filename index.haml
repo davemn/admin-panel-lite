@@ -122,7 +122,7 @@
               .form-group.has-error
                 %label Select File
                 %input(type="file" name="attachment")
-                %p.help-block.hidden Something went wrong!
+                %p.help-block.hidden#help-attachment Something went wrong!
               %button.btn.btn-default(type="submit") Submit
               %p.help-block Will upload the selected file, if any.
           .col-md-6
@@ -154,8 +154,47 @@
         var formatted = `["${hash}","${form.title}","${form.division}","${form['file-type']}","${form['business-area']}","${form.category}","${form.subject}"],`;
         
         $('textarea#textarea-json').val(formatted);
+        
+        return [hash, form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
+      }
+      
+      /**
+       * Persists the form fields to the JSON file on the server.
+       */
+      function saveJson(model){
+        console.log('Saving entry ...');
+        
+        $.ajax({
+          type: "POST",
+          url: 'save.php',
+          processData: false,
+          contentType: 'application/json',
+          data: JSON.stringify(model)
+        })
+        .done(function(data, status, resp){
+          // Add line to table
+          saved = $.parseJSON(resp.responseText);
+          
+          $('table#table-edit > tbody').append(`<tr>
+            <td><a href="${saved.id}">${saved.title}</a></td>
+            <td>${saved.division}</td>
+            <td>${saved['file-type']}</td>
+            <td>${saved['business-area']}</td>
+            <td>${saved.category}</td>
+            <td>${saved.subject}</td>
+            <td>-</td>
+          </tr>`);
+        })
+        .fail(function(resp){
+          var errObj = $.parseJSON(resp.responseText);
+          console.log('An error occurred: ' + errObj.error);
+        });
       }
             
+      /**
+       * Uploads the file attachment to the server, then
+       * calls saveJson() to persist the form data.
+       */
       function upload(evt){
         evt.preventDefault();
         
@@ -164,8 +203,8 @@
         
         var attachments = $formElem.find('input[name="attachment"]').get(0).files;
         if(attachments.length === 0){
-          $formElem.find('.help-block').removeClass('hidden');
-          $formElem.find('.help-block').text('No attachment specified!');
+          $formElem.find('.help-block#help-attachment').removeClass('hidden');
+          $formElem.find('.help-block#help-attachment').text('No attachment specified!');
           
           formatJson.call(formElem, '???');
           return;
@@ -179,7 +218,7 @@
         
         $.ajax({
           type: "POST",
-          url: 'upload.php',
+          url: 'save-attachment.php',
           processData: false,
           contentType: false, // note, this is a multipart form request. 
           data: form
@@ -190,18 +229,29 @@
           var hashed = $.parseJSON(resp.responseText);
           console.log(hashed);
           
-          formatJson.call(formElem, hashed.attachment);
+          var formatted = formatJson.call(formElem, hashed.id);
+          saveJson(formatted); // only add JSON when a file is specified
         })
         .fail(function(resp){
           console.log("POST operation failed!");
           
           var errObj = $.parseJSON(resp.responseText);
           
-          $formElem.find('.help-block').removeClass('hidden');
-          $formElem.find('.help-block').text(errObj.error);
+          $formElem.find('.help-block#help-attachment').removeClass('hidden');
+          $formElem.find('.help-block#help-attachment').text(errObj.error);
           
           formatJson.call(formElem, '???');
         });
+      }
+      
+      function deferredSubmit(formSel){
+        var deferred = $.Deferred(function(deferred){
+          $(formSel).submit(function(evt){
+            deferred.resolve(evt);
+          });
+        });
+        
+        return deferred.promise();
       }
                  
       $(document).ready(function(evt) {

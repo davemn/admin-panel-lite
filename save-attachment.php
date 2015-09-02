@@ -1,18 +1,5 @@
 <?php
-  function _requestStatus($code) {
-      $status = array(  
-          200 => 'OK',
-          404 => 'Not Found',   
-          405 => 'Method Not Allowed',
-          500 => 'Internal Server Error',
-      ); 
-      return ($status[$code])?$status[$code]:$status[500]; 
-  }
-
-  function _response($data, $status = 200) {
-    header("HTTP/1.1 " . $status . " " . _requestStatus($status));
-    echo json_encode($data);
-  }
+  require_once('response.util.php');
 
   $isJsonSubmit = strpos($_SERVER['CONTENT_TYPE'], 'application/json') === 0;
   $isMultipartSubmit = strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === 0;
@@ -61,7 +48,7 @@
     //   $changed['file_id'] = $this->request['file_id'];
     //   
     // return $changed;
-    _response(array('attachment' => $canonical_name),200);
+    _response(array('id' => $canonical_name),200);
       
   } catch (Exception $e) {
       _response(
