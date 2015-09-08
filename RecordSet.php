@@ -31,9 +31,19 @@ JSON;
       return $preamble . $body . $postscript;
     }
     
+    /**
+     * Calculate a unique identifier for a record. A record is a flat array 
+     * of strings.
+     */
     static function hashRecord($record){
+      // Drop the file hash, clean up the remaining fields 
+      // (only alphanumeric, no whitespace), and concatenate.
       $preHash = array_reduce(array_slice($record, 1), function($carry, $item){
-        return $carry . $item;
+        $valid = trim($item);
+        $valid = preg_replace("/[^A-Za-z0-9]/", "", $valid);
+        $valid = strtoupper($valid);
+        
+        return $carry . $valid;
       }, '');
       return md5($preHash);
     }
