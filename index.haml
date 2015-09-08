@@ -112,13 +112,75 @@
                   %option(value="file") Other
               .form-group
                 %label Business Area
-                %input.form-control(name="business-area" value="-")
+                %select.form-control(name="business-area" placeholder="Select a business area...")
+                  %option(value="") Select a business area...
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
               .form-group
                 %label Category
-                %input.form-control(name="category" value="-")
+                %select.form-control(name="category" placeholder="Select a category...")
+                  %option(value="") Select a category...
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
               .form-group
                 %label Subject
-                %input.form-control(name="subject" value="-")
+                %select.form-control(name="subject" placeholder="Select a subject...")
+                  %option(value="") Select a subject...
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
+                  <option value="Example Value">Example Value</option>
               .form-group.has-error
                 %label Select File
                 %input(type="file" name="attachment")
@@ -260,6 +322,15 @@
         });
         $('form#form-request select[name="file-type"]').selectize({
           sortField: 'text'
+        });
+        $('form#form-request select[name="business-area"]').selectize({
+          create: true
+        });
+        $('form#form-request select[name="category"]').selectize({
+          create: true
+        });
+        $('form#form-request select[name="subject"]').selectize({
+          create: true
         });
         
         // %table.table.table-bordered#table-edit
