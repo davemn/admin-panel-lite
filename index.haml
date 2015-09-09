@@ -235,7 +235,7 @@
           ]
         });
         
-        this.listenTo(EventQueue, 'add', DataView.prototype.add);
+        this.listenTo(EventQueue, 'storage:add', DataView.prototype.add);
         this.listenTo(EventQueue, 'remove', DataView.prototype.remove);
       };
       DataView.prototype.add = function(record){
@@ -249,42 +249,17 @@
       
       // ===
       
-      var Data = function(){
+      var Storage = function(){
         _.extend(this, Backbone.Events);
-        this.listenTo(EventQueue, 'add', Data.prototype.save);
-      };
-      /**
-       * Persists the form fields to the JSON file on the server.
-       */
-      Data.prototype.save = function(record){
-        console.log('Writing to JSON ...');
-        
-        $.ajax({
-          type: "POST",
-          url: 'save.php',
-          processData: false,
-          contentType: 'application/json',
-          data: JSON.stringify(record)
-        })
-        .fail(function(resp){
-          console.log("JSON write operation failed!");
-          var errObj = $.parseJSON(resp.responseText);
-          
-          EventQueue.trigger('error:add', errObj.error);
-        });
-      };
-      
-      // ===
-      
-      var FileInput = function(){
-        _.extend(this, Backbone.Events);
-        this.listenTo(EventQueue, 'user:add', FileInput.prototype.upload);
-      };
-      FileInput.prototype.upload = function(record, attachment){
+        this.listenTo(EventQueue, 'user:add', Storage.prototype.addBlob);
+      }
+      Storage.prototype.addBlob = function(record, attachment){
         console.log('Uploading file ...');
         
         var form = new FormData();
         form.append("attachment", attachment);
+        
+        var outerThis = this;
         
         $.ajax({
           type: "POST",
@@ -301,7 +276,7 @@
           
           // Add the newly calculated file hash to the front of the record
           record.unshift(hashed.id);
-          EventQueue.trigger('add', record);
+          outerThis.addArray(record);
         })
         .fail(function(resp){
           console.log("File upload operation failed!");
@@ -310,154 +285,115 @@
           EventQueue.trigger('error:add', errObj.error);
         });
       };
+      /**
+       * Persists the form fields to the JSON file on the server.
+       */
+      Storage.prototype.addArray = function(record){
+        console.log('Writing to JSON ...');
+        
+        $.ajax({
+          type: "POST",
+          url: 'save.php',
+          processData: false,
+          contentType: 'application/json',
+          data: JSON.stringify(record)
+        })
+        .done(function(data, status, resp){
+          console.log('JSON write success!');
+          EventQueue.trigger('storage:add', record);
+        })
+        .fail(function(resp){
+          console.log("JSON write operation failed!");
+          var errObj = $.parseJSON(resp.responseText);
+          
+          EventQueue.trigger('error:add', errObj.error);
+        });
+      };
+      
+      // ===
+
+      var EditForm = function(formSelector){
+        _.extend(this, Backbone.Events);
+        
+        this.$formElem = $(formSelector);
+        this.formElem = this.$formElem.get(0);
+        
+        this.$formElem.find('select[name="division"]').selectize({
+          sortField: 'text'
+        });
+        this.$formElem.find('select[name="file-type"]').selectize({
+          sortField: 'text'
+        });
+        this.$formElem.find('select[name="business-area"]').selectize({
+          create: true
+        });
+        this.$formElem.find('select[name="category"]').selectize({
+          create: true
+        });
+        this.$formElem.find('select[name="subject"]').selectize({
+          create: true
+        });
+        
+        this.$formElem.submit(EditForm.prototype.onSubmit.bind(this)); // have to bind, otherwise jQuery takes over our 'this'
+        
+        this.listenTo(EventQueue, 'storage:add', EditForm.prototype.saved);
+        this.listenTo(EventQueue, 'error:add', EditForm.prototype.error);
+      };
+      EditForm.prototype.onSubmit = function(evt){
+        evt.preventDefault();
+        
+        // Disable submit button for N milliseconds, to prevent double-clicking
+        this.$formElem.find('button[type="submit"]').prop('disabled', true);
+        window.setTimeout(EditForm.prototype.canSubmit.bind(this), 1500);
+        
+        // Get the file attachment, if any
+        var attachments = this.$formElem.find('input[name="attachment"]').get(0).files;
+        if(attachments.length === 0){
+          EventQueue.trigger('error:add', 'No attachment specified');
+          return;
+        }
+        var attachment = attachments[0];
+        
+        // Get the form fields, and format into a record
+        var form = {};
+        var formVals = this.$formElem.serializeArray();
+        
+        formVals.forEach(function(formVal){
+          form[formVal.name] = formVal.value;
+        });
+        
+        var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
+        
+        EventQueue.trigger('user:add', record, attachment);
+      };
+      EditForm.prototype.canSubmit = function(){
+        this.$formElem.find('button[type="submit"]').prop('disabled', false);
+      };
+      EditForm.prototype.saved = function(){
+        // If form successfully saved, clear out error messages, and re-enable submit button
+        this.$formElem.find('.help-block#help-attachment').addClass('hidden');
+        this.$formElem.find('.help-block#help-attachment').text('');
+      };
+      EditForm.prototype.error = function(errorMsg){
+        this.$formElem.find('.help-block#help-attachment').removeClass('hidden');
+        this.$formElem.find('.help-block#help-attachment').text(errorMsg);
+      };
       
       // ===
 
       $(document).ready(function(evt) {
-        $('form#form-request select[name="division"]').selectize({
-          sortField: 'text'
-        });
-        $('form#form-request select[name="file-type"]').selectize({
-          sortField: 'text'
-        });
-        $('form#form-request select[name="business-area"]').selectize({
-          create: true
-        });
-        $('form#form-request select[name="category"]').selectize({
-          create: true
-        });
-        $('form#form-request select[name="subject"]').selectize({
-          create: true
-        });
-        
-      // Handle user input
-        $('form#form-request').submit(function(evt){
-          evt.preventDefault();
-          
-          // Get the file attachment, if any
-          var formElem = this;
-          var $formElem = $(this);
-          
-          var attachments = $formElem.find('input[name="attachment"]').get(0).files;
-          if(attachments.length === 0){
-            EventQueue.trigger('error:add', 'No attachment specified');
-            return;
-          }
-          var attachment = attachments[0];
-          
-          // Get the form fields, and format into a record
-          var form = {};
-          var formVals = $formElem.serializeArray();
-          
-          formVals.forEach(function(formVal){
-            form[formVal.name] = formVal.value;
-          });
-          
-          var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
-          
-          EventQueue.trigger('user:add', record, attachment);
-        });
-        
       // Setup the app components
-      // <<<
-        // var App = {
-        //   dataView: new DataView('#table-all'),
-        //   data: new Data(),
-        //   fileInput: new FileInput()
-        // };
-        // _.extend(App, Backbone.Events);
-        // 
-        // // Error handling
-        // App.listenTo(EventQueue, 'error:add', function(errorMsg){
-        //   var $formElem = $('form#form-request');
-        //   
-        //   $formElem.find('.help-block#help-attachment').removeClass('hidden');
-        //   $formElem.find('.help-block#help-attachment').text(errorMsg);
-        // });
-      // ---
-        $.fn.DataTable.ext.internal._fnFilterCreateSearch = function( search, regex, smart, caseInsensitive )
-        {
-          search = regex ?
-            search :
-            _fnEscapeRegex( search );
-          
-          if ( smart ) {
-            /* For smart filtering we want to allow the search to work regardless of
-             * word order. We also want double quoted text to be preserved, so word
-             * order is important - a la google. So this is what we want to
-             * generate:
-             * 
-             * ^(?=.*?\bone\b)(?=.*?\btwo three\b)(?=.*?\bfour\b).*$
-             */
-            var a = $.map( search.match( /"[^"]+"|[^ ]+/g ) || [''], function ( word ) {
-              return word.charAt(0) === '"' ?
-                word.match( /^"(.*)"$/ )[1] :
-                word;
-            } );
-        
-            search = '^(?=.*?'+a.join( ')(?=.*?' )+').*$';
-          }
-        
-          return new RegExp( search, caseInsensitive ? 'i' : '' );
+        var App = {
+          form: new EditForm('form#form-request'),
+          dataView: new DataView('#table-all'),
+          storage: new Storage()
         };
-      
-        $('#table-all').DataTable({
-          "autoWidth": false,
-          "processing": true,
-          "ajax": "data/index.json",
-          "columns": [
-            { "title": "ID",            "width": "0%" },
-            { "title": "Title",         "width": "43%" },
-            { "title": "Division",      "width": "4%" },
-            { "title": "File Type",     "width": "20%" },
-            { "title": "Business Area", "width": "22%" },
-            { "title": "Category",      "width": "0%" },
-            { "title": "Subject",       "width": "11%" }
-          ],
-          "order": [
-            [2, "asc"]
-          ],
-          "columnDefs": [
-            {
-              "visible": false, 
-              "searchable": false,
-              "orderable": false,
-              "targets": [0] // can't see or search by ID or Category
-            },
-            { "visible": false, "targets": [5] },
-            {
-              "render": function(data, type, row){
-                return '<a href="http://<your server>/documents?id=' + row[0] + '">' + data + '</a>';
-              },
-              "targets": 1
-            },
-            {
-              "render": function(data, type, row){
-                if(data.toLowerCase() === "word")
-                  return '<i class="fa fa-file-word-o"></i> ' + data;  
-                else if (data.toLowerCase() === "pdf")
-                  return '<i class="fa fa-file-pdf-o"></i> ' + data;
-                else if (data.toLowerCase() === "excel")
-                  return '<i class="fa fa-file-excel-o"></i> ' + data;
-                else if (data.toLowerCase() === "powerpoint")
-                  return '<i class="fa fa-file-powerpoint-o"></i> ' + data;
-                else if (data.toLowerCase() === "video")
-                  return '<i class="fa fa-file-video-o"></i> ' + data;
-                else
-                  return '<i class="fa fa-file-o"></i> ' + data;
-              },
-              "targets": 3
-            },
-            {
-              "render": function(data, type, row){
-                if(row[5] === '-')
-                  return data;
-                else
-                  return data + ' (' + row[5] + ')';
-              },
-              "targets": 4
-            }
-          ]
+        _.extend(App, Backbone.Events);
+        
+        // Top-level listeners
+        
+        // Error handling
+        App.listenTo(EventQueue, 'error:add', function(errorMsg){
+          
         });
-       // >>>
       });
