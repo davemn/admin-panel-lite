@@ -11,6 +11,7 @@
 
     <!-- Bootstrap core CSS + customizations -->
     <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css">
     <link rel="stylesheet" type="text/css" href="bower_components/selectize/dist/css/selectize.bootstrap3.css">
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -175,7 +176,7 @@
       var DataView = function(tableSelector){
         _.extend(this, Backbone.Events);
         
-        this.$collection = $(tableSelector).dataTable({
+        this.dtApi = $(tableSelector).DataTable({
           "autoWidth": false,
           "processing": true,
           "ajax": "data/index.json",
@@ -233,7 +234,6 @@
             }
           ]
         });
-        this.dtApi = this.$collection.api();
         
         this.listenTo(EventQueue, 'add', DataView.prototype.add);
         this.listenTo(EventQueue, 'remove', DataView.prototype.remove);
@@ -359,18 +359,105 @@
         });
         
       // Setup the app components
-        var App = {
-          dataView: new DataView('#table-all'),
-          data: new Data(),
-          fileInput: new FileInput()
-        };
-        _.extend(App, Backbone.Events);
-        
-        // Error handling
-        App.listenTo(EventQueue, 'error:add', function(errorMsg){
-          var $formElem = $('form#form-request');
+      // <<<
+        // var App = {
+        //   dataView: new DataView('#table-all'),
+        //   data: new Data(),
+        //   fileInput: new FileInput()
+        // };
+        // _.extend(App, Backbone.Events);
+        // 
+        // // Error handling
+        // App.listenTo(EventQueue, 'error:add', function(errorMsg){
+        //   var $formElem = $('form#form-request');
+        //   
+        //   $formElem.find('.help-block#help-attachment').removeClass('hidden');
+        //   $formElem.find('.help-block#help-attachment').text(errorMsg);
+        // });
+      // ---
+        $.fn.DataTable.ext.internal._fnFilterCreateSearch = function( search, regex, smart, caseInsensitive )
+        {
+          search = regex ?
+            search :
+            _fnEscapeRegex( search );
           
-          $formElem.find('.help-block#help-attachment').removeClass('hidden');
-          $formElem.find('.help-block#help-attachment').text(errorMsg);
+          if ( smart ) {
+            /* For smart filtering we want to allow the search to work regardless of
+             * word order. We also want double quoted text to be preserved, so word
+             * order is important - a la google. So this is what we want to
+             * generate:
+             * 
+             * ^(?=.*?\bone\b)(?=.*?\btwo three\b)(?=.*?\bfour\b).*$
+             */
+            var a = $.map( search.match( /"[^"]+"|[^ ]+/g ) || [''], function ( word ) {
+              return word.charAt(0) === '"' ?
+                word.match( /^"(.*)"$/ )[1] :
+                word;
+            } );
+        
+            search = '^(?=.*?'+a.join( ')(?=.*?' )+').*$';
+          }
+        
+          return new RegExp( search, caseInsensitive ? 'i' : '' );
+        };
+      
+        $('#table-all').DataTable({
+          "autoWidth": false,
+          "processing": true,
+          "ajax": "data/index.json",
+          "columns": [
+            { "title": "ID",            "width": "0%" },
+            { "title": "Title",         "width": "43%" },
+            { "title": "Division",      "width": "4%" },
+            { "title": "File Type",     "width": "20%" },
+            { "title": "Business Area", "width": "22%" },
+            { "title": "Category",      "width": "0%" },
+            { "title": "Subject",       "width": "11%" }
+          ],
+          "order": [
+            [2, "asc"]
+          ],
+          "columnDefs": [
+            {
+              "visible": false, 
+              "searchable": false,
+              "orderable": false,
+              "targets": [0] // can't see or search by ID or Category
+            },
+            { "visible": false, "targets": [5] },
+            {
+              "render": function(data, type, row){
+                return '<a href="http://<your server>/documents?id=' + row[0] + '">' + data + '</a>';
+              },
+              "targets": 1
+            },
+            {
+              "render": function(data, type, row){
+                if(data.toLowerCase() === "word")
+                  return '<i class="fa fa-file-word-o"></i> ' + data;  
+                else if (data.toLowerCase() === "pdf")
+                  return '<i class="fa fa-file-pdf-o"></i> ' + data;
+                else if (data.toLowerCase() === "excel")
+                  return '<i class="fa fa-file-excel-o"></i> ' + data;
+                else if (data.toLowerCase() === "powerpoint")
+                  return '<i class="fa fa-file-powerpoint-o"></i> ' + data;
+                else if (data.toLowerCase() === "video")
+                  return '<i class="fa fa-file-video-o"></i> ' + data;
+                else
+                  return '<i class="fa fa-file-o"></i> ' + data;
+              },
+              "targets": 3
+            },
+            {
+              "render": function(data, type, row){
+                if(row[5] === '-')
+                  return data;
+                else
+                  return data + ' (' + row[5] + ')';
+              },
+              "targets": 4
+            }
+          ]
         });
+       // >>>
       });
