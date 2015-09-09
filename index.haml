@@ -21,12 +21,37 @@
     <![endif]-->
   %body
     %section
-      .container
+      .container-fluid
         .row
-          .col-md-12
-            <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
-        .row
-          .col-md-6
+          .col-md-4
+            %h1 Recent History
+            .panel.panel-default
+              %ul.list-group
+                %li.list-group-item
+                  %h1
+                    <i class="fa fa-stack-overflow"></i> - Added
+                  %p.text-center When you use the document upload form, this area will show each document you've added. 
+                  %p.text-center You'll only see what you've added this session - reloading the page will clear this list.
+                %li.list-group-item
+                  %h1
+                    <i class="fa fa-trash-o"></i> - Deleted
+                  %p.text-center When you select and delete a document, this area will show each document you've deleted. 
+                  %p.text-center You'll only see what you've deleted this session - reloading the page will clear this list.
+                  .list-group
+                    %a.list-group-item(href="#")
+                      %h4.list-group-item-heading List group item heading
+                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
+                    %a.list-group-item(href="#")
+                      %h4.list-group-item-heading List group item heading
+                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
+                    %a.list-group-item(href="#")
+                      %h4.list-group-item-heading List group item heading
+                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
+                    %a.list-group-item(href="#")
+                      %h4.list-group-item-heading List group item heading
+                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.              
+          .col-md-7.col-md-offset-1
+            %h1 Upload a Document
             %form#form-request
               .form-group
                 %label Title
@@ -137,10 +162,11 @@
                 %label Select File
                 %input(type="file" name="attachment")
                 %p.help-block.hidden#help-attachment Something went wrong!
-              %button.btn.btn-default(type="submit") Submit
+              %button.btn.btn-primary(type="submit") Submit
               %p.help-block Will upload the selected file, if any.
-          .col-md-6
-            %p.strong [List of added / removed documents here]
+            %hr.hr-gray-light/
+            %h1 Delete a Document
+            <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
     <script type="text/javascript" src="bower_components/underscore/underscore-min.js"></script>
@@ -344,7 +370,7 @@
         
         // Disable submit button for N milliseconds, to prevent double-clicking
         this.$formElem.find('button[type="submit"]').prop('disabled', true);
-        window.setTimeout(EditForm.prototype.canSubmit.bind(this), 1500);
+        window.setTimeout(EditForm.prototype.canSubmit.bind(this), 1000);
         
         // Get the file attachment, if any
         var attachments = this.$formElem.find('input[name="attachment"]').get(0).files;
