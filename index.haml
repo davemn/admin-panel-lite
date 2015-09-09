@@ -32,12 +32,13 @@
                     <i class="fa fa-stack-overflow"></i> - Added
                   %p.text-center When you use the document upload form, this area will show each document you've added. 
                   %p.text-center You'll only see what you've added this session - reloading the page will clear this list.
+                  .list-group#list-group-added
                 %li.list-group-item
                   %h1
                     <i class="fa fa-trash-o"></i> - Deleted
                   %p.text-center When you select and delete a document, this area will show each document you've deleted. 
                   %p.text-center You'll only see what you've deleted this session - reloading the page will clear this list.
-                  .list-group
+                  .list-group#list-group-deleted
                     %a.list-group-item(href="#")
                       %h4.list-group-item-heading List group item heading
                       %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
@@ -406,13 +407,37 @@
       };
       
       // ===
+      
+      var EditHistory = function(addListSelector, delListSelector){
+        _.extend(this, Backbone.Events);
+        
+        this.$addList = $(addListSelector);
+        this.$delList = $(delListSelector);
+        
+        this.listenTo(EventQueue, 'storage:add', EditHistory.prototype.add);
+      };
+      EditHistory.prototype.add = function(record){
+        // <a class="list-group-item" href="http://<your server>/documents?id=${record[0]}">
+        //   <h4 class="list-group-item-heading">${record[1]}</h4>
+        //   <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p>
+        //   <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p>
+        //   <p class="list-group-item-text"><strong>Business Area</strong> ${record[4]}</p>
+        //   <p class="list-group-item-text"><strong>Category</strong> ${record[5]}</p>
+        //   <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p>
+        // </a>
+        
+        this.$addList.append(`<a class="list-group-item" href="http://<your server>/documents?id=${record[0]}"> <h4 class="list-group-item-heading">${record[1]}</h4> <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p> <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p> <p class="list-group-item-text"><strong>Business Area</strong> ${record[4]}</p> <p class="list-group-item-text"><strong>Category</strong> ${record[5]}</p> <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p> </a>`);
+      };
+      
+      // ===
 
       $(document).ready(function(evt) {
       // Setup the app components
         var App = {
           form: new EditForm('form#form-request'),
           dataView: new DataView('#table-all'),
-          storage: new Storage()
+          storage: new Storage(),
+          history: new EditHistory('.list-group#list-group-added', '.list-group#list-group-deleted')
         };
         _.extend(App, Backbone.Events);
         
