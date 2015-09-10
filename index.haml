@@ -52,7 +52,7 @@
                       %h4.list-group-item-heading List group item heading
                       %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.              
           .col-md-7.col-md-offset-1
-            %h1 Upload a Document
+            %h1 Add a Document
             %form#form-request
               .form-group
                 %label Title
@@ -163,11 +163,13 @@
                 %label Select File
                 %input(type="file" name="attachment")
                 %p.help-block.hidden#help-attachment Something went wrong!
-              %button.btn.btn-primary(type="submit") Submit
-              %p.help-block Will upload the selected file, if any.
+              %button.btn.btn-center.btn-primary(type="submit") Add
+              %p.help-block.text-center Uploads the given attachment, and saves the file described above.
             %hr.hr-gray-light/
             %h1 Delete a Document
             <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
+            %button.btn.btn-center.btn-primary(type="submit") Delete
+            %p.help-block.text-center Deletes the selected document.
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
     <script type="text/javascript" src="bower_components/underscore/underscore-min.js"></script>
@@ -224,12 +226,18 @@
               "visible": false, 
               "searchable": false,
               "orderable": false,
-              "targets": [0] // can't see or search by ID or Category
+              "targets": [0] // can't see or search by ID
             },
-            { "visible": false, "targets": [5] },
+            { "visible": false, "targets": [5] }, // can't see category
             {
               "render": function(data, type, row){
-                return '<a href="http://<your server>/documents?id=' + row[0] + '">' + data + '</a>';
+                return `
+                  <div class="radio">
+                    <label>
+                      <input type="radio" name="table-view-radio">
+                      <a href="http://<your server>/documents?id=${row[0]}">${data}</a>
+                    </label>
+                  </div>`;
               },
               "targets": 1
             },
