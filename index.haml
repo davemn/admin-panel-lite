@@ -38,19 +38,7 @@
                     <i class="fa fa-trash-o"></i> - Deleted
                   %p.text-center When you select and delete a document, this area will show each document you've deleted. 
                   %p.text-center You'll only see what you've deleted this session - reloading the page will clear this list.
-                  .list-group#list-group-deleted
-                    %a.list-group-item(href="#")
-                      %h4.list-group-item-heading List group item heading
-                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
-                    %a.list-group-item(href="#")
-                      %h4.list-group-item-heading List group item heading
-                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
-                    %a.list-group-item(href="#")
-                      %h4.list-group-item-heading List group item heading
-                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.
-                    %a.list-group-item(href="#")
-                      %h4.list-group-item-heading List group item heading
-                      %p.list-group-item-text Donec id elit non mi porta gravida at eget metus.              
+                  .list-group#list-group-deleted             
           .col-md-7.col-md-offset-1
             %h1 Add a Document
             %form#form-request
@@ -168,7 +156,7 @@
             %hr.hr-gray-light/
             %h1 Delete a Document
             <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
-            %button.btn.btn-center.btn-primary(type="submit") Delete
+            %button.btn.btn-center.btn-primary#button-delete(type="submit") Delete
             %p.help-block.text-center Deletes the selected document.
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
@@ -202,10 +190,11 @@
       
       var EventQueue = _.clone(Backbone.Events);
       
-      var DataView = function(tableSelector){
+      var TableView = function(tableSelector, delBtnSelector){
         _.extend(this, Backbone.Events);
         
-        this.dtApi = $(tableSelector).DataTable({
+        this.$table = $(tableSelector);
+        this.dtApi = this.$table.DataTable({
           "autoWidth": false,
           "processing": true,
           "ajax": "data/index.json",
@@ -270,16 +259,42 @@
           ]
         });
         
-        this.listenTo(EventQueue, 'storage:add', DataView.prototype.add);
-        this.listenTo(EventQueue, 'remove', DataView.prototype.remove);
+        this.$delBtn = $(delBtnSelector);
+        this.$delBtn.click(TableView.prototype.onSubmit.bind(this));
+        
+        this.listenTo(EventQueue, 'storage:add', TableView.prototype.add);
+        this.listenTo(EventQueue, 'storage:remove', TableView.prototype.remove);
       };
-      DataView.prototype.add = function(record){
+      TableView.prototype.add = function(record){
         this.dtApi.row.add(record);
         this.dtApi.draw();
       };
-      DataView.prototype.remove = function(recordIdx){
+      TableView.prototype.remove = function(recordIdx){
         this.dtApi.row(recordIdx).remove();
         this.dtApi.draw();
+      };
+      TableView.prototype.onSubmit = function(evt){
+        evt.preventDefault();
+        
+        // Disable submit button for N milliseconds, to prevent double-clicking
+        this.$delBtn.prop('disabled', true);
+        window.setTimeout(TableView.prototype.canSubmit.bind(this), 1000);
+        
+        var selIdx = -1;
+        this.$table.find('tbody > tr').each(function(i){
+          if($(this).find('input[type="radio"]:checked').length !== 0){
+            selIdx = i;
+            return false; // stop iterating
+          }
+        });
+        
+        var sel = this.$table.find('tbody > tr').get(selIdx);
+        
+        var record = this.dtApi.row(sel).data();
+        EventQueue.trigger('user:remove', record);
+      };
+      TableView.prototype.canSubmit = function(){
+        this.$delBtn.prop('disabled', false);
       };
       
       // ===
@@ -423,6 +438,7 @@
         this.$delList = $(delListSelector);
         
         this.listenTo(EventQueue, 'storage:add', EditHistory.prototype.add);
+        this.listenTo(EventQueue, 'user:remove', EditHistory.prototype.remove); // TODO listen to storage:remove event instead!
       };
       EditHistory.prototype.add = function(record){
         // <a class="list-group-item" href="http://<your server>/documents?id=${record[0]}">
@@ -436,6 +452,17 @@
         
         this.$addList.append(`<a class="list-group-item" href="http://<your server>/documents?id=${record[0]}"> <h4 class="list-group-item-heading">${record[1]}</h4> <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p> <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p> <p class="list-group-item-text"><strong>Business Area</strong> ${record[4]}</p> <p class="list-group-item-text"><strong>Category</strong> ${record[5]}</p> <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p> </a>`);
       };
+      EditHistory.prototype.remove = function(record){
+        this.$delList.append(`
+          <a class="list-group-item" href="http://<your server>/documents?id=${record[0]}">
+            <h4 class="list-group-item-heading">${record[1]}</h4>
+            <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p>
+            <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p>
+            <p class="list-group-item-text"><strong>Business Area</strong> ${record[4]}</p>
+            <p class="list-group-item-text"><strong>Category</strong> ${record[5]}</p>
+            <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p>
+          </a>`);
+      };
       
       // ===
 
@@ -443,7 +470,7 @@
       // Setup the app components
         var App = {
           form: new EditForm('form#form-request'),
-          dataView: new DataView('#table-all'),
+          table: new TableView('#table-all', 'button#button-delete'),
           storage: new Storage(),
           history: new EditHistory('.list-group#list-group-added', '.list-group#list-group-deleted')
         };
