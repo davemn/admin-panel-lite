@@ -158,6 +158,7 @@
             <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
             %button.btn.btn-center.btn-primary#button-delete(type="submit") Delete
             %p.help-block.text-center Deletes the selected document.
+            %p.help-block.hidden#help-remove Something went wrong!
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
     <script type="text/javascript" src="bower_components/underscore/underscore-min.js"></script>
@@ -262,16 +263,37 @@
         this.$delBtn = $(delBtnSelector);
         this.$delBtn.click(TableView.prototype.onSubmit.bind(this));
         
-        this.listenTo(EventQueue, 'storage:add', TableView.prototype.add);
-        this.listenTo(EventQueue, 'storage:remove', TableView.prototype.remove);
+        this.listenTo(EventQueue, 'storage:add', TableView.prototype.added);
+        this.listenTo(EventQueue, 'storage:remove', TableView.prototype.removed);
+        
+        this.listenTo(EventQueue, 'error:remove', TableView.prototype.error);
       };
-      TableView.prototype.add = function(record){
+      TableView.prototype.added = function(record){
         this.dtApi.row.add(record);
         this.dtApi.draw();
       };
-      TableView.prototype.remove = function(recordIdx){
-        this.dtApi.row(recordIdx).remove();
+      TableView.prototype.removed = function(record){
+        
+        // Select the row whose data matches the delete record
+        var sel = this.dtApi.row(function(i,data,node){
+          var match = true;
+          for(var i=0; i < record.length; i++){
+            match = match && (record[i] === data[i]);
+          }
+          return match;
+        })
+        
+        if(sel.length === 0)
+          console.log('Failed to remove row from table!');
+        else
+          sel.remove();
+        
+        // Redraw the table now that we've removed the selected row
         this.dtApi.draw();
+        
+        // If record successfully removed, clear out error messages
+        $('.help-block#help-remove').addClass('hidden');
+        $('.help-block#help-remove').text('');
       };
       TableView.prototype.onSubmit = function(evt){
         evt.preventDefault();
@@ -296,12 +318,17 @@
       TableView.prototype.canSubmit = function(){
         this.$delBtn.prop('disabled', false);
       };
+      TableView.prototype.error = function(errorMsg){
+        this.$formElem.find('.help-block#help-remove').removeClass('hidden');
+        this.$formElem.find('.help-block#help-remove').text(errorMsg);
+      };
       
       // ===
       
       var Storage = function(){
         _.extend(this, Backbone.Events);
         this.listenTo(EventQueue, 'user:add', Storage.prototype.addBlob);
+        this.listenTo(EventQueue, 'user:remove', Storage.prototype.remove);
       }
       Storage.prototype.addBlob = function(record, attachment){
         console.log('Uploading file ...');
@@ -357,6 +384,27 @@
           var errObj = $.parseJSON(resp.responseText);
           
           EventQueue.trigger('error:add', errObj.error);
+        });
+      };
+      Storage.prototype.remove = function(record){
+        console.log('Removing from JSON ...');
+        
+        $.ajax({
+          type: "DELETE",
+          url: 'delete.php',
+          processData: false,
+          contentType: 'application/json',
+          data: JSON.stringify(record)
+        })
+        .done(function(data, status, resp){
+          console.log('JSON remove success!');
+          EventQueue.trigger('storage:remove', record);
+        })
+        .fail(function(resp){
+          console.log("JSON remove operation failed!");
+          var errObj = $.parseJSON(resp.responseText);
+          
+          EventQueue.trigger('error:remove', errObj.error);
         });
       };
       
@@ -420,7 +468,7 @@
         this.$formElem.find('button[type="submit"]').prop('disabled', false);
       };
       EditForm.prototype.saved = function(){
-        // If form successfully saved, clear out error messages, and re-enable submit button
+        // If form successfully saved, clear out error messages
         this.$formElem.find('.help-block#help-attachment').addClass('hidden');
         this.$formElem.find('.help-block#help-attachment').text('');
       };
@@ -438,7 +486,7 @@
         this.$delList = $(delListSelector);
         
         this.listenTo(EventQueue, 'storage:add', EditHistory.prototype.add);
-        this.listenTo(EventQueue, 'user:remove', EditHistory.prototype.remove); // TODO listen to storage:remove event instead!
+        this.listenTo(EventQueue, 'storage:remove', EditHistory.prototype.remove); // TODO listen to storage:remove event instead!
       };
       EditHistory.prototype.add = function(record){
         // <a class="list-group-item" href="http://<your server>/documents?id=${record[0]}">
