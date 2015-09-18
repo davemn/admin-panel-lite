@@ -21,151 +21,110 @@
     <![endif]-->
   %body
     %section
-      .container-fluid
+      .container
         .row
-          .col-md-4
-            %h1 Recent History
-            .panel.panel-default
-              %ul.list-group
-                %li.list-group-item
-                  %h1
-                    <i class="fa fa-stack-overflow"></i> - Added
-                  %p.text-center When you use the document upload form, this area will show each document you've added. 
-                  %p.text-center You'll only see what you've added this session - reloading the page will clear this list.
-                  .list-group#list-group-added
-                %li.list-group-item
-                  %h1
-                    <i class="fa fa-trash-o"></i> - Deleted
-                  %p.text-center When you select and delete a document, this area will show each document you've deleted. 
-                  %p.text-center You'll only see what you've deleted this session - reloading the page will clear this list.
-                  .list-group#list-group-deleted             
-          .col-md-7.col-md-offset-1
-            %h1 Add a Document
-            %form#form-request
-              .form-group
-                %label Title
-                %input.form-control(name="title")
-              .form-group
-                %label Division
-                %select.form-control(name="division" placeholder="Select a division...")
-                  %option(value="") Select a division...
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-              .form-group
-                %label File Type
-                %select.form-control(name="file-type" placeholder="Select a file type...")
-                  %option(value="") Select a file type...
-                  %option(value="Word") Word
-                  %option(value="PDF") PDF
-                  %option(value="Excel") Excel
-                  %option(value="PowerPoint") Powerpoint
-                  %option(value="Video") Video
-                  %option(value="file") Other
-              .form-group
-                %label Business Area
-                %select.form-control(name="business-area" placeholder="Select a business area...")
-                  %option(value="") Select a business area...
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-              .form-group
-                %label Category
-                %select.form-control(name="category" placeholder="Select a category...")
-                  %option(value="") Select a category...
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-              .form-group
-                %label Subject
-                %select.form-control(name="subject" placeholder="Select a subject...")
-                  %option(value="") Select a subject...
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-                  <option value="Example Value">Example Value</option>
-              .form-group.has-error
-                %label Select File
-                %input(type="file" name="attachment")
-                %p.help-block.hidden#help-attachment Something went wrong!
-              %button.btn.btn-center.btn-primary(type="submit") Add
-              %p.help-block.text-center Uploads the given attachment, and saves the file described above.
-            %hr.hr-gray-light/
-            %h1 Delete a Document
-            <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
-            %button.btn.btn-center.btn-primary#button-delete(type="submit") Delete
-            %p.help-block.text-center Deletes the selected document.
-            %p.help-block.hidden#help-remove Something went wrong!
+          %div
+            / Nav tabs
+            %ul.nav.nav-tabs(role="tablist")
+              %li.active(role="presentation")
+                %a(href="#tab-history" aria-controls="history" role="tab" data-toggle="tab") 
+                  %i.fa.fa-history 
+                  History
+              %li(role="presentation")
+                %a(href="#tab-add" aria-controls="add" role="tab" data-toggle="tab") 
+                  %i.fa.fa-plus
+                  Add
+              %li(role="presentation")
+                %a(href="#tab-delete" aria-controls="delete" role="tab" data-toggle="tab") 
+                  %i.fa.fa-trash-o
+                  Delete
+              %li(role="presentation")
+                %a(href="#tab-replace" aria-controls="replace" role="tab" data-toggle="tab")
+                  %i.fa.fa-refresh
+                  Replace
+            / Tab panes
+            .tab-content
+              .tab-pane.active#tab-history(role="tabpanel")
+                %h1 Recent History
+                .panel.panel-default
+                  %ul.list-group
+                    %li.list-group-item
+                      %h1
+                        <i class="fa fa-stack-overflow"></i> - Added
+                      %p.text-center When you use the document upload form, this area will show each document you've added. 
+                      %p.text-center You'll only see what you've added this session - reloading the page will clear this list.
+                      .list-group#list-group-added
+                    %li.list-group-item
+                      %h1
+                        <i class="fa fa-trash-o"></i> - Deleted
+                      %p.text-center When you select and delete a document, this area will show each document you've deleted. 
+                      %p.text-center You'll only see what you've deleted this session - reloading the page will clear this list.
+                      .list-group#list-group-deleted 
+              .tab-pane#tab-add(role="tabpanel")
+                %h1 Add a Document
+                %form#form-request
+                  .form-group
+                    %label Title
+                    %input.form-control(name="title")
+                  .form-group
+                    %label Division
+                    %select.form-control(name="division" placeholder="{{division.placeholder}}...")
+                      <option value=''>{{division.placeholder}}...</option>
+                      {{#each division.options}}
+                      <option value="{{[0]}}">{{[1]}}</option>
+                      {{/each}}
+                  .form-group
+                    %label File Type
+                    %select.form-control(name="file-type" placeholder="{{[file-type].placeholder}}...")
+                      <option value=''>{{[file-type].placeholder}}...</option>
+                      {{#each [file-type].options}}
+                      <option value="{{[0]}}">{{[1]}}</option>
+                      {{/each}}
+                  .form-group
+                    %label Business Area
+                    %select.form-control(name="business-area" placeholder="{{[business-area].placeholder}}...")
+                      <option value=''>{{[business-area].placeholder}}...</option>
+                      {{#each [business-area].options}}
+                      <option value="{{[0]}}">{{[1]}}</option>
+                      {{/each}}
+                  .form-group
+                    %label Category
+                    %select.form-control(name="category" placeholder="{{category.placeholder}}...")
+                      <option value=''>{{category.placeholder}}...</option>
+                      {{#each category.options}}
+                      <option value="{{[0]}}">{{[1]}}</option>
+                      {{/each}}
+                  .form-group
+                    %label Subject
+                    %select.form-control(name="subject" placeholder="{{subject.placeholder}}...")
+                      <option value=''>{{subject.placeholder}}...</option>
+                      {{#each subject.options}}
+                      <option value="{{[0]}}">{{[1]}}</option>
+                      {{/each}}
+                  .form-group.has-error
+                    %label Select File
+                    %input(type="file" name="attachment")
+                    %p.help-block.hidden#help-attachment Something went wrong!
+                  %button.btn.btn-center.btn-primary(type="submit") Add
+                  %p.help-block.text-center Uploads the given attachment, and saves the file described above.
+              .tab-pane#tab-delete(role="tabpanel")
+                %h1 Delete a Document
+                <table cellspacing='0' class='table table-striped table-bordered' id='table-all' width='100%'></table>
+                %button.btn.btn-center.btn-primary#button-delete(type="submit") Delete
+                %p.help-block.text-center Deletes the selected document.
+                %p.help-block.hidden#help-remove Something went wrong!
+              .tab-pane#tab-replace(role="tabpanel")
+                Bat
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
     <script type="text/javascript" src="bower_components/underscore/underscore-min.js"></script>
+        
     <script type="text/javascript" src="bower_components/backbone/backbone-min.js"></script>
     <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    
     <script type="text/javascript" src="bower_components/datatables/media/js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+    
     <script type="text/javascript" src="bower_components/selectize/dist/js/standalone/selectize.min.js"></script>
     :javascript
       $(window).load(function() {
@@ -415,7 +374,7 @@
         
         this.$formElem = $(formSelector);
         this.formElem = this.$formElem.get(0);
-        
+                
         this.$formElem.find('select[name="division"]').selectize({
           sortField: 'text'
         });
