@@ -430,7 +430,7 @@
               return false;
           }
           return true;
-        })
+        });
         
         if(sel.length === 0){
           console.log('TODO error handling: could not find old record to replace.');
@@ -546,6 +546,7 @@
         
         this.listenTo(EventQueue, 'storage:add', TableView.prototype.added);
         this.listenTo(EventQueue, 'storage:remove', TableView.prototype.removed);
+        this.listenTo(EventQueue, 'storage:replace', TableReplace.prototype.replaced);
         
         this.listenTo(EventQueue, 'error:remove', TableView.prototype.error);
       };
@@ -554,20 +555,21 @@
         this.dtApi.draw();
       };
       TableView.prototype.removed = function(record){
-        
-        // Select the row whose data matches the delete record
-        var sel = this.dtApi.row(function(i,data,node){
-          var match = true;
+        // Select the row whose data matches the deleted record
+        var sel = this.dtApi.row(function(i,data,node){          
           for(var i=0; i < record.length; i++){
-            match = match && (record[i] === data[i]);
+            if(record[i] !== data[i])
+              return false;
           }
-          return match;
-        })
+          return true;
+        });
         
-        if(sel.length === 0)
-          console.log('Failed to remove row from table!');
-        else
-          sel.remove();
+        if(sel.length === 0){
+          EventQueue.trigger('error:remove', 'Unable to find deleted record!');
+          return;
+        }
+        
+        sel.remove();
         
         // Redraw the table now that we've removed the selected row
         this.dtApi.draw();
@@ -576,12 +578,33 @@
         $('.help-block#help-remove').addClass('hidden');
         $('.help-block#help-remove').text('');
       };
+      TableView.prototype.replaced = function(oldRecord, newRecord){
+        
+        // Select the row whose data matches the old record
+        var sel = this.dtApi.row(function(i,data,node){          
+          for(var i=0; i < oldRecord.length; i++){
+            if(oldRecord[i] !== data[i])
+              return false;
+          }
+          return true;
+        });
+        
+        if(sel.length === 0){
+          console.log('TODO error handling: could not find old record to replace.');
+          return;
+        }
+        
+        sel.data(newRecord); // update the row
+        
+        // Redraw the table now that we've updated the selected row
+        this.dtApi.draw();
+      };
       TableView.prototype.onSubmit = function(evt){
         evt.preventDefault();
         
         // Disable submit button for N milliseconds, to prevent double-clicking
         this.$delBtn.prop('disabled', true);
-        window.setTimeout(TableView.prototype.canSubmit.bind(this), 1000);
+        window.setTimeout(TableView.prototype.enableSubmit.bind(this), 1000);
         
         var selIdx = -1;
         this.$table.find('tbody > tr').each(function(i){
@@ -596,12 +619,12 @@
         var record = this.dtApi.row(sel).data();
         EventQueue.trigger('user:remove', record);
       };
-      TableView.prototype.canSubmit = function(){
+      TableView.prototype.enableSubmit = function(){
         this.$delBtn.prop('disabled', false);
       };
       TableView.prototype.error = function(errorMsg){
-        this.$formElem.find('.help-block#help-remove').removeClass('hidden');
-        this.$formElem.find('.help-block#help-remove').text(errorMsg);
+        this.$table.siblings('.help-block#help-remove').removeClass('hidden');
+        this.$table.siblings('.help-block#help-remove').text(errorMsg);
       };
       
       // ===
