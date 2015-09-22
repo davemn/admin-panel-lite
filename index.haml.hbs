@@ -162,8 +162,8 @@
                     %input(type="file" name="attachment")
                     / %p.help-block.hidden#help-attachment Something went wrong!
                   .text-right
-                    %button.btn.btn-default#button-replace-cancel Cancel
-                    %button.btn.btn-primary#button-replace(type="submit") Replace
+                    %button.btn.btn-default#button-replace-cancel(disabled) Cancel
+                    %button.btn.btn-primary#button-replace(type="submit" disabled) Replace
                   %p.help-block.text-center Replaces the selected document.
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
@@ -205,8 +205,9 @@
       var FormReplace = function(formSelector){
         _.extend(this, Backbone.Events);
         
+        this.record = null;
+        
         this.$formElem = $(formSelector);
-        this.formElem = this.$formElem.get(0);
         this.selCtl = [];
                 
         var $division = this.$formElem.find('select[name="division"]').selectize({
@@ -234,9 +235,27 @@
         this.$formElem.submit(FormReplace.prototype.onSubmit.bind(this)); // have to bind, otherwise jQuery takes over our 'this'
         this.$formElem.find('button#button-replace-cancel').click(FormReplace.prototype.onCancel.bind(this));
         
+        this.listenTo(EventQueue, 'user:select', FormReplace.prototype.enableSubmit);
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.selected);
+        this.listenTo(EventQueue, 'storage:replace', FormReplace.prototype.clear);
+      };
+      FormReplace.prototype.clear = function(record){
+        this.record = null;
+        
+        // Clear value of plain form elements
+        this.$formElem.find('input[name="title"]').val('');
+        
+        // Clear value of "selectized" form elements
+        for(var i=0; i < this.selCtl.length; i++){ // ctl is a Selectize API instance
+          this.selCtl[i].clear(true);
+        }
+        
+        // Disable form buttons (submit and cancel)
+        this.$formElem.find('button').prop('disabled', true);
       };
       FormReplace.prototype.selected = function(record){
+        this.record = record.slice(0); // clone the new record
+        
         // Populate value of plain form elements
         this.$formElem.find('input[name="title"]').val(record[1]);
         
@@ -248,22 +267,18 @@
       FormReplace.prototype.onCancel = function(evt){
         evt.preventDefault();
         
-        // Clear value of plain form elements
-        this.$formElem.find('input[name="title"]').val('');
-        
-        // Clear value of "selectized" form elements
-        for(var i=0; i < this.selCtl.length; i++){ // ctl is a Selectize API instance
-          this.selCtl[i].clear(true);
-        }
+        this.clear();
         
         EventQueue.trigger('user:select-cancel');
       };
       FormReplace.prototype.onSubmit = function(evt){
         evt.preventDefault();
         
-        // Disable all form buttons for N milliseconds, to prevent double-clicking
+        if(this.record === null) // TODO error handling: prevent typing in replace form unless a document has been selected
+          return;
+        
+        // Disable all form buttons until we hear back from server, to prevent double-clicking
         this.$formElem.find('button').prop('disabled', true);
-        window.setTimeout(FormReplace.prototype.canSubmit.bind(this), 1000);
         
         // // Get the file attachment, if any
         // var attachments = this.$formElem.find('input[name="attachment"]').get(0).files;
@@ -272,24 +287,25 @@
         //   return;
         // }
         // var attachment = attachments[0];
-        // 
-        // // Get the form fields, and format into a record
-        // var form = {};
-        // var formVals = this.$formElem.serializeArray();
-        // 
-        // formVals.forEach(function(formVal){
-        //   form[formVal.name] = formVal.value;
-        // });
-        // 
-        // var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
-        // 
-        // EventQueue.trigger('user:add', record, attachment);
-      };
-      FormReplace.prototype.canSubmit = function(){
-        this.$formElem.find('button').prop('disabled', false);
         
-        console.log('TODO should be emitted by storage system!');
-        EventQueue.trigger('storage:replace');
+        // Get the form fields, and format into a record
+        var form = {};
+        var formVals = this.$formElem.serializeArray();
+        
+        formVals.forEach(function(formVal){
+          form[formVal.name] = formVal.value;
+        });
+        
+        var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
+        
+      // <<<
+      //EventQueue.trigger('user:add', record, attachment);
+      // ---
+        EventQueue.trigger('user:replace', this.record, record);
+      // >>>
+      };
+      FormReplace.prototype.enableSubmit = function(){ // re-enable submit after replacement, & de-select the current doc
+        this.$formElem.find('button').prop('disabled', false);
       };
       // FormReplace.prototype.saved = function(){
       //   // If form successfully saved, clear out error messages
@@ -337,7 +353,7 @@
                   <div class="radio">
                     <label>
                       <input type="radio" name="table-view-radio">
-                      <a href="http://<your server>/documents?id=${row[0]}">${data}</a>
+                      <a href="http://mydmv/documents?id=${row[0]}">${data}</a>
                     </label>
                   </div>`;
               },
@@ -373,13 +389,14 @@
         });
         
         this.$selBtn = $(selBtnSelector);
-        this.$selBtn.click(TableReplace.prototype.onSubmit.bind(this));
+        this.$selBtn.click(TableReplace.prototype.onSelect.bind(this));
         
         this.listenTo(EventQueue, 'storage:add', TableReplace.prototype.added);
         this.listenTo(EventQueue, 'storage:remove', TableReplace.prototype.removed);
+        this.listenTo(EventQueue, 'storage:replace', TableReplace.prototype.replaced);
         
         // re-enable the select button if the update succeeded, or the user cancelled
-        this.listenTo(EventQueue, 'storage:replace user:select-cancel', TableReplace.prototype.canSubmit);
+        this.listenTo(EventQueue, 'storage:replace user:select-cancel', TableReplace.prototype.canSelect);
       };
       TableReplace.prototype.added = function(record){
         this.dtApi.row.add(record);
@@ -404,7 +421,28 @@
         // Redraw the table now that we've removed the selected row
         this.dtApi.draw();
       };
-      TableReplace.prototype.onSubmit = function(evt){
+      TableReplace.prototype.replaced = function(oldRecord, newRecord){
+        
+        // Select the row whose data matches the old record
+        var sel = this.dtApi.row(function(i,data,node){          
+          for(var i=0; i < oldRecord.length; i++){
+            if(oldRecord[i] !== data[i])
+              return false;
+          }
+          return true;
+        })
+        
+        if(sel.length === 0){
+          console.log('TODO error handling: could not find old record to replace.');
+          return;
+        }
+        
+        sel.data(newRecord); // update the row
+        
+        // Redraw the table now that we've updated the selected row
+        this.dtApi.draw();
+      };
+      TableReplace.prototype.onSelect = function(evt){
         evt.preventDefault();
         
         // Disable submit button until changes are made, or cancelled
@@ -419,7 +457,7 @@
         });
         
         if(selIdx === -1){ // nothing was selected, to reenable our select button
-          this.canSubmit();
+          this.canSelect();
           return;
         }
         
@@ -428,7 +466,7 @@
         var record = this.dtApi.row(sel).data();
         EventQueue.trigger('user:select', record);
       };
-      TableReplace.prototype.canSubmit = function(){
+      TableReplace.prototype.canSelect = function(){
         this.$selBtn.prop('disabled', false);
       };
             
@@ -468,7 +506,7 @@
                   <div class="radio">
                     <label>
                       <input type="radio" name="table-view-radio">
-                      <a href="http://<your server>/documents?id=${row[0]}">${data}</a>
+                      <a href="http://mydmv/documents?id=${row[0]}">${data}</a>
                     </label>
                   </div>`;
               },
@@ -572,6 +610,7 @@
         _.extend(this, Backbone.Events);
         this.listenTo(EventQueue, 'user:add', Storage.prototype.addBlob);
         this.listenTo(EventQueue, 'user:remove', Storage.prototype.remove);
+        this.listenTo(EventQueue, 'user:replace', Storage.prototype.replace);
       }
       Storage.prototype.addBlob = function(record, attachment){
         console.log('Uploading file ...');
@@ -649,6 +688,10 @@
           
           EventQueue.trigger('error:remove', errObj.error);
         });
+      };
+      Storage.prototype.replace = function(oldRecord, newRecord){ // TODO backend impl
+        newRecord.unshift('???'); // add missing file ID
+        EventQueue.trigger('storage:replace', oldRecord, newRecord); // send old and new records
       };
       
       // ===
@@ -732,7 +775,7 @@
         this.listenTo(EventQueue, 'storage:remove', EditHistory.prototype.remove); // TODO listen to storage:remove event instead!
       };
       EditHistory.prototype.add = function(record){
-        // <a class="list-group-item" href="http://<your server>/documents?id=${record[0]}">
+        // <a class="list-group-item" href="http://mydmv/documents?id=${record[0]}">
         //   <h4 class="list-group-item-heading">${record[1]}</h4>
         //   <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p>
         //   <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p>
@@ -741,11 +784,11 @@
         //   <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p>
         // </a>
         
-        this.$addList.append(`<a class="list-group-item" href="http://<your server>/documents?id=${record[0]}"> <h4 class="list-group-item-heading">${record[1]}</h4> <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p> <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p> <p class="list-group-item-text"><strong>Business Area</strong> ${record[4]}</p> <p class="list-group-item-text"><strong>Category</strong> ${record[5]}</p> <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p> </a>`);
+        this.$addList.append(`<a class="list-group-item" href="http://mydmv/documents?id=${record[0]}"> <h4 class="list-group-item-heading">${record[1]}</h4> <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p> <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p> <p class="list-group-item-text"><strong>Business Area</strong> ${record[4]}</p> <p class="list-group-item-text"><strong>Category</strong> ${record[5]}</p> <p class="list-group-item-text"><strong>Subject</strong> ${record[6]}</p> </a>`);
       };
       EditHistory.prototype.remove = function(record){
         this.$delList.append(`
-          <a class="list-group-item" href="http://<your server>/documents?id=${record[0]}">
+          <a class="list-group-item" href="http://mydmv/documents?id=${record[0]}">
             <h4 class="list-group-item-heading">${record[1]}</h4>
             <p class="list-group-item-text"><strong>Division</strong> ${record[2]}</p>
             <p class="list-group-item-text"><strong>File Type</strong> ${record[3]}</p>
