@@ -160,8 +160,8 @@
                   .form-group.has-error
                     %label Select File
                     %input(type="file" name="attachment")
-                    / %p.help-block.hidden#help-attachment Something went wrong!
-                  .text-right
+                    %p.help-block.hidden#help-replace Something went wrong!
+                  .text-center
                     %button.btn.btn-default#button-replace-cancel(disabled) Cancel
                     %button.btn.btn-primary#button-replace(type="submit" disabled) Replace
                   %p.help-block.text-center Replaces the selected document.
@@ -238,6 +238,8 @@
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.enableSubmit);
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.selected);
         this.listenTo(EventQueue, 'storage:replace', FormReplace.prototype.clear);
+        
+        this.listenTo(EventQueue, 'error:replace', FormReplace.prototype.error);
       };
       FormReplace.prototype.clear = function(record){
         this.record = null;
@@ -252,6 +254,10 @@
         
         // Disable form buttons (submit and cancel)
         this.$formElem.find('button').prop('disabled', true);
+        
+        // Clear out error messages
+        this.$formElem.find('.help-block#help-replace').addClass('hidden');
+        this.$formElem.find('.help-block#help-replace').text('');
       };
       FormReplace.prototype.selected = function(record){
         this.record = record.slice(0); // clone the new record
@@ -307,15 +313,10 @@
       FormReplace.prototype.enableSubmit = function(){ // re-enable submit after replacement, & de-select the current doc
         this.$formElem.find('button').prop('disabled', false);
       };
-      // FormReplace.prototype.saved = function(){
-      //   // If form successfully saved, clear out error messages
-      //   this.$formElem.find('.help-block#help-attachment').addClass('hidden');
-      //   this.$formElem.find('.help-block#help-attachment').text('');
-      // };
-      // FormReplace.prototype.error = function(errorMsg){
-      //   this.$formElem.find('.help-block#help-attachment').removeClass('hidden');
-      //   this.$formElem.find('.help-block#help-attachment').text(errorMsg);
-      // };
+      FormReplace.prototype.error = function(errorMsg){
+        this.$formElem.find('.help-block#help-replace').removeClass('hidden');
+        this.$formElem.find('.help-block#help-replace').text(errorMsg);
+      };
       
       // ===
       
@@ -671,7 +672,7 @@
        * Persists the form fields to the JSON file on the server.
        */
       Storage.prototype.addArray = function(record){
-        console.log('Writing to JSON ...');
+        console.log('Adding to JSON ...');
         
         $.ajax({
           type: "POST",
@@ -681,11 +682,11 @@
           data: JSON.stringify(record)
         })
         .done(function(data, status, resp){
-          console.log('JSON write success!');
+          console.log('JSON add success!');
           EventQueue.trigger('storage:add', record);
         })
         .fail(function(resp){
-          console.log("JSON write operation failed!");
+          console.log("JSON add operation failed!");
           var errObj = $.parseJSON(resp.responseText);
           
           EventQueue.trigger('error:add', errObj.error);
@@ -713,8 +714,28 @@
         });
       };
       Storage.prototype.replace = function(oldRecord, newRecord){ // TODO backend impl
-        newRecord.unshift('???'); // add missing file ID
-        EventQueue.trigger('storage:replace', oldRecord, newRecord); // send old and new records
+        newRecord.unshift(oldRecord[0]); // TODO: calculate new attachment ID, when specified
+        
+        console.log('Replacing entry in JSON ...');
+        
+        $.ajax({
+          type: "PUT",
+          url: 'replace.php',
+          processData: false,
+          contentType: 'application/json',
+          data: JSON.stringify([oldRecord, newRecord])
+        })
+        .done(function(data, status, resp){
+          console.log('JSON replace success!');
+          
+          EventQueue.trigger('storage:replace', oldRecord, newRecord); // send old and new records
+        })
+        .fail(function(resp){
+          console.log("JSON replace operation failed!");
+          var errObj = $.parseJSON(resp.responseText);
+          
+          EventQueue.trigger('error:replace', errObj.error);
+        });
       };
       
       // ===

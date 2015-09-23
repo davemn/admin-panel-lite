@@ -119,6 +119,38 @@ JSON;
       return $record;
     }
     
+    public function replace($oldRecord, $newRecord){
+      if(!$this->contains($oldRecord))
+        throw new Exception('Could not find matching record to replace!');
+    
+      // Find the old record, if any, and merge in the new record
+      $hash = RecordSet::hashRecord($oldRecord);
+      $recordIdx = -1;
+      
+      for($i=0; $i < count($this->dataHash); $i++){
+        if($this->dataHash[$i] === $hash){
+          $recordIdx = $i;
+          break;
+        }
+      }
+      
+      if($recordIdx === -1)
+        throw new Exception('Could not find matching hash!');
+      
+      array_splice($this->data, $recordIdx, 1, array($newRecord)); // wrap in array, otherwise will append as individual fields
+      array_splice($this->dataHash, $recordIdx, 1, RecordSet::hashRecord($newRecord));
+      
+      return $newRecord;
+    }
+    
+    public function __toString(){
+      $str = '';
+      foreach($this->data as $curRecord){
+        $str .= json_encode($curRecord) . PHP_EOL;
+      }
+      return $str;
+    }
+    
     function save(){
       $pretty = RecordSet::dataPrettyPrint($this->data);
       file_put_contents($this->filename, $pretty);
