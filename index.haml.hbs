@@ -115,56 +115,65 @@
                 %p.help-block.hidden#help-remove Something went wrong!
               .tab-pane#tab-replace(role="tabpanel")
                 %h1 Replace a Document
-                <table cellspacing='0' class='table table-striped table-bordered' id='table-replace' width='100%'></table>
+                .overlay
+                  .hidden.overlay-locked#select-locked
+                    %h1
+                      %i.fa.fa-3x.fa-lock
+                  <table cellspacing='0' class='table table-striped table-bordered' id='table-replace' width='100%'></table>
                 %button.btn.btn-center.btn-primary#button-select(type="submit") Select to Edit
                 %p.help-block.text-center Selects a document to replace.
-                %form#form-replace
-                  .form-group
-                    %label Title
-                    %input.form-control(name="title")
-                  .form-group
-                    %label Division
-                    %select.form-control(name="division" placeholder="{{division.placeholder}}...")
-                      <option value=''>{{division.placeholder}}...</option>
-                      {{#each division.options}}
-                      <option value="{{[0]}}">{{[1]}}</option>
-                      {{/each}}
-                  .form-group
-                    %label File Type
-                    %select.form-control(name="file-type" placeholder="{{[file-type].placeholder}}...")
-                      <option value=''>{{[file-type].placeholder}}...</option>
-                      {{#each [file-type].options}}
-                      <option value="{{[0]}}">{{[1]}}</option>
-                      {{/each}}
-                  .form-group
-                    %label Business Area
-                    %select.form-control(name="business-area" placeholder="{{[business-area].placeholder}}...")
-                      <option value=''>{{[business-area].placeholder}}...</option>
-                      {{#each [business-area].options}}
-                      <option value="{{[0]}}">{{[1]}}</option>
-                      {{/each}}
-                  .form-group
-                    %label Category
-                    %select.form-control(name="category" placeholder="{{category.placeholder}}...")
-                      <option value=''>{{category.placeholder}}...</option>
-                      {{#each category.options}}
-                      <option value="{{[0]}}">{{[1]}}</option>
-                      {{/each}}
-                  .form-group
-                    %label Subject
-                    %select.form-control(name="subject" placeholder="{{subject.placeholder}}...")
-                      <option value=''>{{subject.placeholder}}...</option>
-                      {{#each subject.options}}
-                      <option value="{{[0]}}">{{[1]}}</option>
-                      {{/each}}
-                  .form-group.has-error
-                    %label Select File
-                    %input(type="file" name="attachment")
-                    %p.help-block.hidden#help-replace Something went wrong!
-                  .text-center
-                    %button.btn.btn-default#button-replace-cancel(disabled) Cancel
-                    %button.btn.btn-primary#button-replace(type="submit" disabled) Replace
-                  %p.help-block.text-center Replaces the selected document.
+                %hr.hr-gray-light
+                .overlay
+                  .overlay-locked
+                    %h1
+                      %i.fa.fa-3x.fa-lock
+                  %form#form-replace
+                    .form-group
+                      %label Title
+                      %input.form-control(name="title")
+                    .form-group
+                      %label Division
+                      %select.form-control(name="division" placeholder="{{division.placeholder}}...")
+                        <option value=''>{{division.placeholder}}...</option>
+                        {{#each division.options}}
+                        <option value="{{[0]}}">{{[1]}}</option>
+                        {{/each}}
+                    .form-group
+                      %label File Type
+                      %select.form-control(name="file-type" placeholder="{{[file-type].placeholder}}...")
+                        <option value=''>{{[file-type].placeholder}}...</option>
+                        {{#each [file-type].options}}
+                        <option value="{{[0]}}">{{[1]}}</option>
+                        {{/each}}
+                    .form-group
+                      %label Business Area
+                      %select.form-control(name="business-area" placeholder="{{[business-area].placeholder}}...")
+                        <option value=''>{{[business-area].placeholder}}...</option>
+                        {{#each [business-area].options}}
+                        <option value="{{[0]}}">{{[1]}}</option>
+                        {{/each}}
+                    .form-group
+                      %label Category
+                      %select.form-control(name="category" placeholder="{{category.placeholder}}...")
+                        <option value=''>{{category.placeholder}}...</option>
+                        {{#each category.options}}
+                        <option value="{{[0]}}">{{[1]}}</option>
+                        {{/each}}
+                    .form-group
+                      %label Subject
+                      %select.form-control(name="subject" placeholder="{{subject.placeholder}}...")
+                        <option value=''>{{subject.placeholder}}...</option>
+                        {{#each subject.options}}
+                        <option value="{{[0]}}">{{[1]}}</option>
+                        {{/each}}
+                    .form-group.has-error
+                      %label Select File
+                      %input(type="file" name="attachment")
+                      %p.help-block.hidden#help-replace Something went wrong!
+                    .text-center
+                      %button.btn.btn-default#button-replace-cancel(disabled) Cancel
+                      %button.btn.btn-primary#button-replace(type="submit" disabled) Replace
+                    %p.help-block.text-center Replaces the selected document.
     / Placed at the end of the document so the pages load faster
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
     <script type="text/javascript" src="bower_components/underscore/underscore-min.js"></script>
@@ -237,8 +246,7 @@
         
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.enableSubmit);
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.selected);
-        this.listenTo(EventQueue, 'user:select-cancel', FormReplace.prototype.clear);
-        this.listenTo(EventQueue, 'storage:replace', FormReplace.prototype.clear);
+        this.listenTo(EventQueue, 'storage:replace user:select-cancel', FormReplace.prototype.clear);
         
         this.listenTo(EventQueue, 'error:replace', FormReplace.prototype.error);
       };
@@ -254,11 +262,14 @@
         }
         
         // Clear selected attachment
-        var $fileInput = this.$formElem.find('input[name="attachment"]');
+        var $fileInput = this.$formElem.find('input[name="attachment"]'); // see https://css-tricks.com/snippets/jquery/clear-a-file-input/
         $fileInput.replaceWith($fileInput.val('').clone(true));
         
         // Disable form buttons (submit and cancel)
         this.$formElem.find('button').prop('disabled', true);
+        
+        // Show "locked" overlay
+        this.$formElem.siblings('.overlay-locked').removeClass('hidden');
         
         // Clear out error messages
         this.$formElem.find('.help-block#help-replace').addClass('hidden');
@@ -323,6 +334,9 @@
       };
       FormReplace.prototype.enableSubmit = function(){ // enable submit after selection
         this.$formElem.find('button').prop('disabled', false);
+        
+        // Hide "locked" overlay
+        this.$formElem.siblings('.overlay-locked').addClass('hidden');
       };
       FormReplace.prototype.error = function(errorMsg){
         this.$formElem.find('.help-block#help-replace').removeClass('hidden');
@@ -460,6 +474,9 @@
         // Disable submit button until changes are made, or cancelled
         this.$selBtn.prop('disabled', true);
         
+        // Show 'lock' overlay until changes are made, or cancelled
+        $('.overlay-locked#select-locked').removeClass('hidden');
+        
         var selIdx = -1;
         this.$table.find('tbody > tr').each(function(i){
           if($(this).find('input[type="radio"]:checked').length !== 0){
@@ -480,6 +497,7 @@
       };
       TableReplace.prototype.canSelect = function(){
         this.$selBtn.prop('disabled', false);
+        $('.overlay-locked#select-locked').addClass('hidden');
       };
             
       // ===
