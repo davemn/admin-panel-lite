@@ -289,9 +289,6 @@
         if(this.record === null)
           return;
         
-        // Disable all form buttons until we hear back from server, to prevent double-clicking
-        this.$formElem.find('button').prop('disabled', true);
-        
         // Get the file attachment, if any
         var attachments = this.$formElem.find('input[name="attachment"]').get(0).files;
         var attachment = null;
@@ -302,11 +299,21 @@
         var form = {};
         var formVals = this.$formElem.serializeArray();
         
+        var hasEmptyFields = false;
         formVals.forEach(function(formVal){
           form[formVal.name] = formVal.value;
+          hasEmptyFields |= (formVal.value.length === 0);
         });
         
+        if(hasEmptyFields){
+          EventQueue.trigger('error:replace', 'One or more fields is empty');
+          return;
+        }
+                
         var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
+        
+        // Disable all form buttons until we hear back from server, to prevent double-clicking
+        this.$formElem.find('button').prop('disabled', true);
         
         // Upload a new file, if specified, in addition to replacing record fields
         if(attachment === null)
@@ -826,9 +833,16 @@
         var form = {};
         var formVals = this.$formElem.serializeArray();
         
+        var hasEmptyFields = false;
         formVals.forEach(function(formVal){
           form[formVal.name] = formVal.value;
+          hasEmptyFields |= (formVal.value.length === 0);
         });
+        
+        if(hasEmptyFields){
+          EventQueue.trigger('error:add', 'One or more fields is empty');
+          return;
+        }
         
         var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
         
