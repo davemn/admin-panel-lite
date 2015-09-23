@@ -237,6 +237,7 @@
         
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.enableSubmit);
         this.listenTo(EventQueue, 'user:select', FormReplace.prototype.selected);
+        this.listenTo(EventQueue, 'user:select-cancel', FormReplace.prototype.clear);
         this.listenTo(EventQueue, 'storage:replace', FormReplace.prototype.clear);
         
         this.listenTo(EventQueue, 'error:replace', FormReplace.prototype.error);
@@ -251,6 +252,10 @@
         for(var i=0; i < this.selCtl.length; i++){ // ctl is a Selectize API instance
           this.selCtl[i].clear(true);
         }
+        
+        // Clear selected attachment
+        var $fileInput = this.$formElem.find('input[name="attachment"]');
+        $fileInput.replaceWith($fileInput.val('').clone(true));
         
         // Disable form buttons (submit and cancel)
         this.$formElem.find('button').prop('disabled', true);
@@ -269,30 +274,29 @@
         for(var i=0; i < this.selCtl.length; i++){ // ctl is a Selectize API instance
           this.selCtl[i].setValue(record[i+2], true);  
         }
+        
+        // Clear selected attachment, if any
+        var $fileInput = this.$formElem.find('input[name="attachment"]');
+        $fileInput.replaceWith($fileInput.val('').clone(true));
       };
       FormReplace.prototype.onCancel = function(evt){
-        evt.preventDefault();
-        
-        this.clear();
-        
+        evt.preventDefault();        
         EventQueue.trigger('user:select-cancel');
       };
       FormReplace.prototype.onSubmit = function(evt){
         evt.preventDefault();
         
-        if(this.record === null) // TODO error handling: prevent typing in replace form unless a document has been selected
+        if(this.record === null)
           return;
         
         // Disable all form buttons until we hear back from server, to prevent double-clicking
         this.$formElem.find('button').prop('disabled', true);
         
-        // // Get the file attachment, if any
-        // var attachments = this.$formElem.find('input[name="attachment"]').get(0).files;
-        // if(attachments.length === 0){
-        //   EventQueue.trigger('error:add', 'No attachment specified');
-        //   return;
-        // }
-        // var attachment = attachments[0];
+        // Get the file attachment, if any
+        var attachments = this.$formElem.find('input[name="attachment"]').get(0).files;
+        var attachment = null;
+        if(attachments.length !== 0)
+          attachment = attachments[0];
         
         // Get the form fields, and format into a record
         var form = {};
@@ -304,13 +308,13 @@
         
         var record = [form.title, form.division, form['file-type'], form['business-area'], form.category, form.subject];
         
-      // <<<
-      //EventQueue.trigger('user:add', record, attachment);
-      // ---
-        EventQueue.trigger('user:replace', this.record, record);
-      // >>>
+        // Upload a new file, if specified, in addition to replacing record fields
+        if(attachment === null)
+          EventQueue.trigger('user:replace', this.record, record);
+        else
+          EventQueue.trigger('user:replace', this.record, record, attachment);
       };
-      FormReplace.prototype.enableSubmit = function(){ // re-enable submit after replacement, & de-select the current doc
+      FormReplace.prototype.enableSubmit = function(){ // enable submit after selection
         this.$formElem.find('button').prop('disabled', false);
       };
       FormReplace.prototype.error = function(errorMsg){
@@ -634,7 +638,7 @@
         _.extend(this, Backbone.Events);
         this.listenTo(EventQueue, 'user:add', Storage.prototype.addBlob);
         this.listenTo(EventQueue, 'user:remove', Storage.prototype.remove);
-        this.listenTo(EventQueue, 'user:replace', Storage.prototype.replace);
+        this.listenTo(EventQueue, 'user:replace', Storage.prototype.replaceBlob);
       }
       Storage.prototype.addBlob = function(record, attachment){
         console.log('Uploading file ...');
@@ -713,9 +717,45 @@
           EventQueue.trigger('error:remove', errObj.error);
         });
       };
-      Storage.prototype.replace = function(oldRecord, newRecord){ // TODO backend impl
-        newRecord.unshift(oldRecord[0]); // TODO: calculate new attachment ID, when specified
+      Storage.prototype.replaceBlob = function(oldRecord, newRecord, attachment){
+        if(typeof attachment === 'undefined'){
+          newRecord.unshift(oldRecord[0]); // file ID did not change, so copy old to new
+          this.replaceArray(oldRecord, newRecord);
+          return;
+        }
         
+        console.log('Uploading file ...');
+        
+        var form = new FormData();
+        form.append("attachment", attachment);
+        
+        var outerThis = this;
+        
+        $.ajax({
+          type: "POST",
+          url: 'save-attachment.php',
+          processData: false,
+          contentType: false, // note, this is a multipart form request. 
+          data: form
+        })
+        .done(function(data, status, resp){
+          console.log('Upload success!');
+          
+          var hashed = $.parseJSON(resp.responseText);
+          console.log(hashed);
+          
+          // Add the newly calculated file hash to the front of the new record
+          newRecord.unshift(hashed.id);
+          outerThis.replaceArray(oldRecord, newRecord);
+        })
+        .fail(function(resp){
+          console.log("File upload operation failed!");
+
+          var errObj = $.parseJSON(resp.responseText);
+          EventQueue.trigger('error:replace', errObj.error);
+        });
+      };
+      Storage.prototype.replaceArray = function(oldRecord, newRecord){        
         console.log('Replacing entry in JSON ...');
         
         $.ajax({
