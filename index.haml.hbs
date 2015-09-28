@@ -285,7 +285,18 @@
         
         // Populate value of "selectized" form elements
         for(var i=0; i < this.selCtl.length; i++){ // ctl is a Selectize API instance
-          this.selCtl[i].setValue(record[i+2], true);  
+          this.selCtl[i].setValue(record[i+2], true);
+
+          // The record field doesn't match an existing value in the dropdown, so add it
+          if(this.selCtl[i].getValue().length === 0){
+            var newOpt = {};
+            newOpt.value = record[i+2];
+            newOpt.text = record[i+2];
+            
+            this.selCtl[i].addOption(newOpt);
+            this.selCtl[i].refreshOptions(false);
+            this.selCtl[i].addItem(record[i+2], true);
+          }
         }
         
         // Clear selected attachment, if any
