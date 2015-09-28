@@ -1,4 +1,5 @@
-<?php include('login.php'); ?>
+<?php require_once('config.php'); ?>
+<?php require_once('login.php'); ?>
 !!!
 %html
   %head
@@ -353,7 +354,7 @@
         this.dtApi = this.$table.DataTable({
           "autoWidth": false,
           "processing": true,
-          "ajax": "data/index.json",
+          "ajax": "<?php echo $AppConfig['dataFileUrl']; ?>",
           "columns": [
             { "title": "ID",            "width": "0%" },
             { "title": "Title",         "width": "43%" },
@@ -510,7 +511,7 @@
         this.dtApi = this.$table.DataTable({
           "autoWidth": false,
           "processing": true,
-          "ajax": "data/index.json",
+          "ajax": "<?php echo $AppConfig['dataFileUrl']; ?>",
           "columns": [
             { "title": "ID",            "width": "0%" },
             { "title": "Title",         "width": "43%" },

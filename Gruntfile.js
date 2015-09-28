@@ -63,7 +63,7 @@ module.exports = function (grunt) {
         expand: true,
         src: [
           '<%= pkg.main %>.php', 'login.php', '<%= pkg.main %>.css', '.htaccess',
-          'response.util.php','RecordSet.php','delete.php','replace.php','save.php','save-attachment.php',
+          'config.php', 'response.util.php','RecordSet.php','delete.php','replace.php','save.php','save-attachment.php',
           'bower_components/jquery/dist/**', 
           'bower_components/underscore/*.js',
           'bower_components/bootstrap/dist/**',
@@ -73,6 +73,7 @@ module.exports = function (grunt) {
           'bower_components/respond/dest/**',
           'bower_components/shared-styles/**',
           'bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.*',
+          'bower_components/datatables-plugins/integration/bootstrap/images/**',
           'bower_components/datatables/media/js/jquery.dataTables.js',
           'bower_components/selectize/dist/css/selectize.bootstrap3.css',
           'bower_components/selectize/dist/js/standalone/selectize.min.js'
