@@ -1,4 +1,5 @@
 <?php
+  require_once('config.php');
   require_once('response.util.php');
   require_once('RecordSet.php');
   
@@ -25,7 +26,7 @@
     if(count($request) < 2)
       throw new Exception('Unable to replace record - both original and replacement expected.');
     
-    $records = new RecordSet('data/index.json');
+    $records = new RecordSet($AppConfig['dataFile']);
 
     $replaced = $records->replace($request[0], $request[1]);
     $records->save();

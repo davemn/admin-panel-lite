@@ -1,4 +1,5 @@
 <?php
+  require_once('config.php');
   require_once('response.util.php');
   
   header("Access-Control-Allow-Orgin: *");
@@ -42,7 +43,7 @@
     if($canonical_name === false)
       throw new Exception('Unable to compute a hash for the attached file.');
         
-    $moveResult = move_uploaded_file($files[$attachmentName]['tmp_name'], 'attachments/' . $canonical_name . '.' . $extension);
+    $moveResult = move_uploaded_file($files[$attachmentName]['tmp_name'], $AppConfig['uploadDirectory'] . '/' . $canonical_name . '.' . $extension);
     if($moveResult === false)
       throw new Exception('Unable to move attached file to permanent storage.');
     

@@ -1,4 +1,5 @@
 <?php
+  require_once('config.php');
   require_once('response.util.php');
   require_once('RecordSet.php');
   
@@ -23,7 +24,7 @@
     if(count($request) === 0)
       throw new Exception('No data given, or HTTP method not allowed.');
     
-    $records = new RecordSet('data/index.json');
+    $records = new RecordSet($AppConfig['dataFile']);
 
     $deleted = $records->delete($request);
     $records->save();

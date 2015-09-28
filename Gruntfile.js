@@ -12,7 +12,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
     
     clean: {
-      site: ['dist', '<%= pkg.name %>.zip', '<%= pkg.main %>.css', '<%= pkg.main %>.haml', '<%= pkg.main %>.html']
+      site: ['dist', '<%= pkg.name %>.zip', '<%= pkg.main %>.css', '<%= pkg.main %>.haml', '<%= pkg.main %>.php']
     },
     
     // handlebars: {
@@ -47,7 +47,7 @@ module.exports = function (grunt) {
     haml: {
       site: {
         src: ['<%= pkg.main %>.haml'],
-        dest: '<%= pkg.main %>.html'
+        dest: '<%= pkg.main %>.php'
       }
     },
     
@@ -62,15 +62,20 @@ module.exports = function (grunt) {
       site: {
         expand: true,
         src: [
-          '<%= pkg.main %>.html', '<%= pkg.main %>.css', '.htaccess',
+          '<%= pkg.main %>.php', 'login.php', '<%= pkg.main %>.css', '.htaccess',
+          'response.util.php','RecordSet.php','delete.php','replace.php','save.php','save-attachment.php',
           'bower_components/jquery/dist/**', 
           'bower_components/underscore/*.js',
           'bower_components/bootstrap/dist/**',
-          'bower_components/backbone/backbone.js', 
+          'bower_components/backbone/backbone-min.js', 
           'bower_components/font-awesome/css/**', 'bower_components/font-awesome/fonts/**', 
           'bower_components/html5shiv/dist/**',
           'bower_components/respond/dest/**',
-          'bower_components/shared-styles/**'
+          'bower_components/shared-styles/**',
+          'bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.*',
+          'bower_components/datatables/media/js/jquery.dataTables.js',
+          'bower_components/selectize/dist/css/selectize.bootstrap3.css',
+          'bower_components/selectize/dist/js/standalone/selectize.min.js'
         ],
         dest: 'dist'
       }
