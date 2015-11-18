@@ -6,7 +6,7 @@ Where that repo exists as an exercise in the full Backbone SPA framework, **Admi
 Specifically, this is an attempt to implement [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality with a small subset of Backbone, and vanilla PHP.
 I used Backbone and [DataTables](https://www.datatables.net/) for message queueing and search/pagination, respectively.
 
-## Creating an [SPA](https://www.youtube.com/watch?v=F5v0oM5EuMA) With a Dash of Backbone
+## Creating an [SPA](https://en.wikipedia.org/wiki/Single-page_application) With a Dash of Backbone
 
 Backbone realizes CRUD by providing structure to message passing, templating, and persistence.
 Backbone is unique in the world of (popular) frameworks, in that it's not opinionated.
