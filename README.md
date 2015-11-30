@@ -7,7 +7,7 @@ Specifically, this is an attempt to implement [CRUD](https://en.wikipedia.org/wi
 I used Backbone and [DataTables](https://www.datatables.net/) for message queueing and search/pagination, respectively.
 
 The application itself is a fully functional proof-of-concept for a [document management system](https://en.wikipedia.org/wiki/Document_management_system).
-A minimal UI is provided, but includes (*unsecure!*) authentication, full-attribute search, and per-session edit history.
+A minimal UI is provided, and includes (*unsecure!*) authentication, full-attribute search, and per-session edit history.
 
 ## Creating an [SPA](https://en.wikipedia.org/wiki/Single-page_application) With a Dash of Backbone
 
@@ -15,7 +15,7 @@ Backbone realizes CRUD by providing structure to message passing, templating, an
 Backbone is unique in the world of (popular) frameworks, in that it's not opinionated.
 Here I've avoided using the templating and persistence layers, to test that assertion.
 
-I've named events from the PoV of the storage layer, which also is the hub of activity driving the application:
+I've named (Backbone) events from the PoV of the storage layer, which also is the hub of activity driving the application:
 
 **Storage Object**
 
@@ -45,12 +45,12 @@ The documents stored in this application have the fields:
 * File Attachment
 
 These are meant to be general-purpose fields, suitable for a medium to large organization.
-Only `File Attachment` cannot be *directly* specified by the user - instead, its value comes from a computed hash of the associated (uploaded) file.
+Only `File Attachment` cannot be *directly* specified by the user - instead, its value comes from a computed hash of the associated file.
   
 ## Persistence
 
 All documents stored by this application are maintained in a single (JSON-formatted) flat-file.
-Document *attachments* are stored in a separate folder, with names matching the MD5 checksum of the file.
+Document *attachments* are stored in a separate folder, with names matching the MD5 checksum of the attachment.
 
 No relationships (in the [database sense](https://en.wikipedia.org/wiki/Relational_model)) are modeled by this application.
 Conceptually, you can think of each supported CRUD operation as manipulating a single database table.
@@ -58,7 +58,7 @@ Conceptually, you can think of each supported CRUD operation as manipulating a s
 ## User Interface
 
 The UI is fairly minimal at this point.
-I used Bootstrap tabs to separate the 4 pieces of (user-visible) functionality:
+I used [Bootstrap tabs](http://getbootstrap.com/components/#nav-tabs) to separate the 4 pieces of (user-visible) functionality:
 
 * A history of adds / deletes for the current session
 * A form for adding a new document
